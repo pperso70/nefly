@@ -1,17 +1,8 @@
 {
-  "name": "esp32-websocket-server",
+  "name": "esp32-netlify-project",
   "version": "1.0.0",
-  "description": "Serveur WebSocket pour ESP32",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
+  "description": "ESP32 project with Netlify functions",
   "dependencies": {
-    "express": "^4.17.1",
-    "ws": "^8.5.0"
-  },
-  "engines": {
-    "node": "14.x"
-  },
-  "license": "MIT"
+    "ws": "^8.13.0"
+  }
 }

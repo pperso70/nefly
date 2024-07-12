@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle ESP32</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        button { font-size: 18px; margin: 10px; padding: 10px 20px; }
+        #data { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Contrôle ESP32</h1>
+    <section id="aff_buttons_cam">          
+        <button onclick = "sendCommand('Down')" id="down" class="gros_bouton"> Down </button>
+        <button onclick = "sendCommand('Up')" id="up" class="gros_bouton">Up</button>
+        <button onclick = "sendCommand('Excur')" id="excur" class="gros_bouton">Excur</button>
+        <button onclick = "sendCommand('Stop')" id="stop" class="gros_bouton">Stop</button>
+        <button onclick = "sendCommand('Raz1000')" id="Raz" class="gros_bouton">Raz milieu</button>
+    </section>
+    <button onclick="sendCommand('LED_ON')">Allumer LED</button>
+    <button onclick="sendCommand('LED_OFF')">Éteindre LED</button>
+    <div id="data">
+        <h2>Données du capteur</h2>
+        <p>Position: <span id="position">--</span></p>
+        <p>Température radiateur: <span id="temperature">--</span>°C</p>
+        <p>RSSI: <span id="rssi">--</span>%</p>
+    </div>
+    <img id="cameraImage" alt="Image de la caméra">
+
+    <script>
+        //const socket = new WebSocket('wss://flash-wild-ketchup.glitch.me');
+        //const socket = new WebSocket('wss://confirmed-careful-objective.glitch.me');
+        const socket = new WebSocket('wss://magnificent-dusk-e7dc72.netlify.app');
+        
+        socket.onopen = function(e) {
+            console.log("Connecté au WebSocket");
+        };
+        
+        socket.onmessage = function(event) {
+             if (event.data.length < 100) {
+            //if (typeof event.data === 'string') {
+                console.log("Données capteurs reçues : ", event.data);
+                const data = JSON.parse(event.data);
+                if (data.position) {
+                document.getElementById('position').textContent = data.position;
+                }
+                if (data.temperature) {
+                document.getElementById('temperature').textContent = data.temperature;
+                }
+                if (data.rssi) {
+                document.getElementById('rssi').textContent = data.rssi;
+                }
+            } else {
+                console.log("Image reçue, taille:", event.data.length, "bytes");
+
+                // Créer un Blob à partir des données binaires
+                const blob = new Blob([event.data], { type: 'image/jpeg' });
+
+                // Créer une URL pour le Blob
+                const imageUrl = URL.createObjectURL(blob);
+
+                // Afficher l'image
+                document.getElementById('cameraImage').src = imageUrl;
+
+                // Libérer la mémoire une fois l'image chargée
+                document.getElementById('cameraImage').onload = function() {
+                    URL.revokeObjectURL(this.src);
+                }
+
+                console.log("URL de l'image créée:", imageUrl);
+
+                // Optionnel : Afficher les premiers octets pour vérification
+                const reader = new FileReader();
+                reader.onload = function() {
+                    const arr = new Uint8Array(reader.result);
+                    console.log("Premiers octets:", Array.from(arr.slice(0, 16)).map(b => b.toString(16).padStart(2, '0')).join(' '));
+                }
+                reader.readAsArrayBuffer(blob.slice(0, 16));
+            }
+        };
+
+        function sendCommand(command) {
+            console.log("Envoi de la commande : " + command);
+            const message = JSON.stringify({command: command});
+            socket.send(message);
+        }
+    </script>
+</body>
+</html>
